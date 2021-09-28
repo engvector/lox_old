@@ -1,4 +1,8 @@
 package scanner
 
-func Scan(filepath string) {
+type Token struct {
+}
+
+func Scan(statement string) ([]Token, error) {
+	return nil, nil
 }
