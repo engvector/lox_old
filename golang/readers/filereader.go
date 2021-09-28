@@ -1,24 +1,33 @@
 // Reads a file from a local path and pushes out one line at a time.
-package filereader
+package readers
 
-import "os"
+import ("os"
+				"bufio"
+				"errors")
 
 type CodeFile struct {
-	lines string
-	//fileHandle *File
+	lines []string
 	lineNumber int
 }
 
-func OpenFile(path string) error {
-	_, err := os.Open(path)
+func (cf *CodeFile) OpenFile(path string) error {
+	file, err := os.Open(path)
+	defer file.Close() // Close file before function exit
+	cf.lineNumber = 0
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		cf.lines = append(cf.lines, scanner.Text())
+	}
 
 	return err
 }
-/*
-func (CodeFile *f) ReadNextLine() string {
-	return ""
-}
 
-func (CodeFile *f) ReadPreviousLine() string {
-	return ""
-}*/
+// Read next line
+func (f *CodeFile) ReadLine() (string, int, error) {
+	if f.lineNumber >= len(f.lines) {
+		return "", -1, errors.New("No more lines left")
+	}
+	line := f.lines[f.lineNumber]
+	f.lineNumber++
+	return line, f.lineNumber, nil
+}

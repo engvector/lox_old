@@ -1,3 +1,3 @@
-package networkreader
+package readers
 
-// Read a line from a network location.
+// Read a line from a network location. Supported protocols - SSH, SFTP
