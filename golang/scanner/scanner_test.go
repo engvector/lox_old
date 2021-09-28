@@ -53,7 +53,7 @@ func TestAllSymbols(t *testing.T) {
 
 func TestKeywordDetection(t *testing.T) {
 	text := "pri print \"ABC\";" // This is an invalid lox syntax.
-	expectedResult := []string {"print", "ABC", ";"}
+	expectedResult := []string {"pri", "print", "ABC", ";"}
 	var scanner Scanner
 	tokens, err := scanner.Scan(text)
 	if err != nil {
