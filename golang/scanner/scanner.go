@@ -2,24 +2,39 @@ package scanner
 
 import "strings"
 
-type Scanner struct {
-	lexemes []string
+type TokenType int32
+
+const (
+	SYMBOL = iota
+	KEYWORD
+	LITERAL
+	STRING_LITERAL
+	COMMENT
+)
+
+type Token struct {
+	Type   TokenType
+	String string
 }
 
-func (s *Scanner) Scan(code string) ([]string, error) {
+type Scanner struct {
+	tokens []Token
+}
+
+func (s *Scanner) Scan(code string) ([]Token, error) {
 	// Valid single character symbols.
 	singleCharSymbols := "{}(),.-+;/*"
-	// Single/Double character symbols are codified as two strings. First 
+	// Single/Double character symbols are codified as two strings. First
 	// string contains the first symbol and the second string contains the
 	// matching second symbol.
-	singleOrDoubleCharSymbols := []string{"!=><","===="}
+	singleOrDoubleCharSymbols := []string{"!=><", "===="}
 	keywords := []string{
-			"and", "class", "else", "false", "fun", "for",
-			"if", "nil", "or", "print", "return", "super",
-			"this", "true", "var", "while"}
+		"and", "class", "else", "false", "fun", "for",
+		"if", "nil", "or", "print", "return", "super",
+		"this", "true", "var", "while"}
 	var literal = ""
 
-	// First Pass: Break string into lexemes
+	// First Pass: Break string into tokens
 	for i := 0; i < len(code); i++ {
 		// First make sure symbols inside quotes are not detected.
 		if code[i] == '"' {
@@ -29,20 +44,29 @@ func (s *Scanner) Scan(code string) ([]string, error) {
 			}
 			// If we were processing a literal before, finish it.
 			if len(literal) > 0 {
-				s.lexemes = append(s.lexemes, literal)
+				s.tokens = append(s.tokens, Token{Type:LITERAL, String:literal})
 				literal = ""
 			}
-			s.lexemes = append(s.lexemes, aString)
+			s.tokens = append(s.tokens,
+												Token{Type:STRING_LITERAL,String:aString})
 			continue // Move on
 		}
+		// Next tokenize rest of the line if we find "//"
+		if code[i] == '/' && code[i+1] == '/' {
+			s.tokens = append(s.tokens,
+												Token{Type:COMMENT,String:code[i:len(code)]})
+			break
+		}
+
 		// Start with single character symbols
 		if strings.IndexByte(singleCharSymbols, code[i]) != -1 {
 			// If we were processing a literal before, finish it.
 			if len(literal) > 0 {
-				s.lexemes = append(s.lexemes, literal)
+				s.tokens = append(s.tokens, Token{Type:LITERAL, String:literal})
 				literal = ""
 			}
-			s.lexemes = append(s.lexemes, string(code[i]))
+			s.tokens = append(s.tokens,
+												Token{Type:SYMBOL,String:string(code[i])})
 			continue // Move on
 		}
 		// Check for single/double character symbols
@@ -50,43 +74,46 @@ func (s *Scanner) Scan(code string) ([]string, error) {
 			if strings.IndexByte(singleOrDoubleCharSymbols[1], code[i+1]) != -1 {
 				// If we were processing a literal before, finish it.
 				if len(literal) > 0 {
-					s.lexemes = append(s.lexemes, literal)
+					s.tokens = append(s.tokens, Token{Type:LITERAL, String:literal})
 					literal = ""
 				}
 				// If both characters matched
-				s.lexemes = append(s.lexemes, string(code[i]) + string(code[i+1]))
+				s.tokens = append(s.tokens,
+													Token{Type:SYMBOL,
+																String:string(code[i])+string(code[i+1])})
 				i++
 			} else {
 				// If we were processing a literal before, finish it.
 				if len(literal) > 0 {
-					s.lexemes = append(s.lexemes, literal)
+					s.tokens = append(s.tokens, Token{Type:LITERAL, String:literal})
 					literal = ""
 				}
 				// If we only matched a single character
-				s.lexemes = append(s.lexemes, string(code[i]))
+				s.tokens = append(s.tokens,
+													Token{Type:SYMBOL,String:string(code[i])})
 			}
 			continue // Move on
 		}
 		// Look for keywords
 		kwd := findKeyword(code, i, keywords)
-		if (kwd != "") {
+		if kwd != "" {
 			// If we were processing a literal before, finish it.
 			if len(literal) > 0 {
-				s.lexemes = append(s.lexemes, literal)
+				s.tokens = append(s.tokens, Token{Type:LITERAL, String:literal})
 				literal = ""
 			}
-			s.lexemes = append(s.lexemes, kwd)
+			s.tokens = append(s.tokens, Token{Type:KEYWORD,String:kwd})
 			i += len(kwd) - 1 // Fast-forward index to end of detected keyword
-			continue // Move on
+			continue          // Move on
 		}
 
 		// If none of the above searches yield anything, it is a literal
 		// Process the string till you find the next valid symbol.
-		if (code[i] != ' ') {
-			literal = literal + string(code[i]);
+		if code[i] != ' ' {
+			literal = literal + string(code[i])
 		}
 	}
-	return s.lexemes, nil
+	return s.tokens, nil
 }
 
 // Look for keywords starting at supplied index.
