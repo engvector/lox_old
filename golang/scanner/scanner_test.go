@@ -4,7 +4,8 @@ import ("testing"
 				"log")
 
 func TestScanner(t *testing.T) {
-	tokens, err := Scan("print \"Hello world!\";")
+	var scanner Scanner
+	tokens, err := scanner.Scan("print \"Hello world!\";")
 	if err != nil {
 		t.Error(err)
 	}
