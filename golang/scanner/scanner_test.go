@@ -12,7 +12,7 @@ func TestSingleCharSymbolLexer(t *testing.T) {
 	}
 	for i := 0; i < len(tokens); i++ {
 		if string(symbols[i]) != tokens[i].String {
-			t.Error("Expected:", string(symbols[i]), "Found:", tokens[i])
+			t.Error("Expected:", string(symbols[i]), "Found:", tokens[i].String)
 		}
 	}
 	log.Print(tokens)
@@ -28,7 +28,7 @@ func TestSingleOrDoubleCharSymbolLexer(t *testing.T) {
 	}
 	for i := 0; i < len(tokens); i++ {
 		if expectedResult[i] != tokens[i].String {
-			t.Error("Expected:", expectedResult[i], "Found:", tokens[i])
+			t.Error("Expected:", expectedResult[i], "Found:", tokens[i].String)
 		}
 	}
 	log.Print(tokens)
@@ -45,7 +45,7 @@ func TestAllSymbols(t *testing.T) {
 	}
 	for i := 0; i < len(tokens); i++ {
 		if expectedResult[i] != tokens[i].String {
-			t.Error("Expected:", expectedResult[i], "Found:", tokens[i])
+			t.Error("Expected:", expectedResult[i], "Found:", tokens[i].String)
 		}
 	}
 	log.Print(tokens)
@@ -61,7 +61,7 @@ func TestKeywordDetection(t *testing.T) {
 	}
 	for i := 0; i < len(tokens); i++ {
 		if expectedResult[i] != tokens[i].String {
-			t.Error("Expected:", expectedResult[i], "Found:", tokens[i])
+			t.Error("Expected:", expectedResult[i], "Found:", tokens[i].String)
 		}
 	}
 	log.Print(tokens)
@@ -76,8 +76,24 @@ func TestQuotedText(t *testing.T) {
 	}
 	for i := 0; i < len(tokens); i++ {
 		if expectedTokens[i] != tokens[i].String {
-			t.Error("Found:",tokens[i]," Expected:", expectedTokens[i])
+			t.Error("Found:",tokens[i].String," Expected:", expectedTokens[i])
 		}
 	}
 	log.Print(tokens)
+}
+
+func TestNumbers(t *testing.T) {
+	var scanner Scanner
+	expectedTokens := []string{"var","n","=","123",".","3",";"}
+	tokens, err := scanner.Scan("var n = 123.3;")
+	if err != nil {
+		t.Error(err)
+	}
+	for i := 0; i < len(tokens); i++ {
+		if expectedTokens[i] != tokens[i].String {
+			t.Error("Found:",tokens[i].String," Expected:", expectedTokens[i])
+		}
+	}
+	log.Print(tokens)
+
 }
